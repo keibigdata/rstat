@@ -1,0 +1,347 @@
+---
+title: "Lesson 6"
+author: "SWK"
+#date: 
+output: html_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, eval=TRUE,message=FALSE)
+```
+
+# 가설검정
+
+## 가설검정: 모집단의 특성에 대한 주장을 채택/기각
+     1. 가설 수립
+     2. 검정 통계량 계산
+     3. 가설 채택 기준 설정
+     4. 채택/기각 결정
+
+## 가설수립: 귀무가설 ($H_0$ Null Hypothesis) vs. 대립가설 ($H_1$ Alternative Hypothesis)
+  
+  + 귀무가설과 대립가설은 모수의 상태를 서로 배반인 2개의 집합으로 나눔
+  + 귀무가설 ; 기존의 견해가 유지된다는 가설 
+  + 대립가설 : 기존의 견해로는 설명을 못한다는 가설
+  + 가설검정 : 귀무가설을 기각시킬 수 있는 증거가 있는지를 검정하는 작업    
+  
+  $$H_0: \quad \mu=1220(mm)$$
+  
+  
+  
+  $$H_1: \quad \mu\neq 1220(mm)$$
+
+
+## 검정통계량(test statistic)
+
+  + 검정통계량: 검정에 사용하느 통계량
+  + 귀무가설이 참이라는 가정 하에서 검정 통계량의 값을 계산
+
+$$T=\frac{\bar{X}-\mu_0}{s/\sqrt{N}}\sim t(n-1)$$
+
+- 검정통계량 계산
+
+```{r teststat}
+
+Testset=c(1205, 1194, 1200,1221,1228,1167,1144,1288, 1242,1171, 1157, 1248, 1203, 1230, 1208)
+load("Testset.Rdata")
+barx=mean(Testset)
+ssx=sqrt(var(Testset))
+N=length(Testset)
+mu0=1220
+T=(barx-mu0)/(ssx/sqrt(N))
+print ("Test statistic T=")
+print (T)
+```
+## 가설 채택 기준 설정 
+    
+### 유의수준: 맞았는데도 틀렸가도 할 가능성은?
+
+  + type 1 error : 귀무가설이 맞았는데도 틀렸다고 검정하는 경우 (죄가 없는데도 감옥에 보내는 오류)
+  
+  + type 2 error : 귀무가설이 틀렸는데도 맞았다고 검정하는 경우 (죄가 있는데도 풀어 줄 오류)
+  
+  + type 1 error를 고정하고, type 2 error를 최소화
+  
+  + 고정된 type 1 error의 수준=유의수준(significance level)=$\alpha$
+  
+### 임계점과 기각역: 감정통계량으로 영가설 채택/기각을 결정하는 기준
+    
+  + 양쪽검정 :$H_0: \mu=\mu_0\qquad  vs. \qquad H_1: \mu\neq \mu_0$
+  
+  + 한쪽검정(오른쪽) :$H_0: \mu=\mu_0 \qquad vs. \qquad H_1: \mu > \mu_0$
+    
+  + 한쪽검정(왼쪽) : $H_0: \mu=\mu_0 \qquad  vs. \qquad H_1: \mu < \mu_0$
+     
+  + 임계점/기각역: 감정통계량이 임계점보다 크면(작으면) 기각/귀무가설을 기각하는 감정통계량의 범위
+    
+  $$ c_{\alpha/2}:\qquad P(T>c_{\alpha/2}|H_o)=P(T<-c_{\alpha/2}|H_o)=\alpha/2\qquad \{T| T<-c_{\alpha/2} \} \cup  \{T| T>c_{\alpha/2} \} $$
+  
+$$ c_{\alpha/2}:\qquad P(|T|>c_{\alpha/2}|H_o)=\alpha/2\qquad \{T| |T|>c_{\alpha/2} \}$$
+  
+  
+  
+  $$ c_{\alpha,u}:\qquad P(T>c_{\alpha,u}|H_o)=\alpha\qquad \{T| T> c_{\alpha,u}\}$$
+  
+  
+  $$ c_{\alpha,l}:\qquad P(T<-c_{\alpha,l}|H_o)=\alpha\qquad\{T| T<-c_{\alpha,l}\}$$
+  
+  
+```{r two way crit5}  
+alpha <- 0.05
+ul <- qt(1-(alpha/2), df=14)
+ll <- -ul
+
+
+par(mar=c(0.5,1,1,1))
+x <- seq(-3, 3, by=0.001)
+y <- dt(x, df=14)
+plot(x, y, type="l", axes=F, ylim=c(-0.02, 0.38), main="", xlab="t", ylab="")
+abline(h=0)
+polygon(c(-3, x[x<ll], ll), c(0, y[x<ll], 0), col=2)
+#polygon(c(-3, ll), c(0, 0), col=2)
+
+polygon(c(ul, x[x>ul], 3), c(0, y[x>ul], 0), col=2)
+#text(-2.5, 0.1, expression(plain(P)(T<t) == 0.025), cex=0.7)
+#text(2.5, 0.1, expression(plain(P)(T>t) == 0.025), cex=0.7)
+text(ll, -0.02, round(ll,3))
+text(ul, -0.02, round(ul,3))
+```
+
+
+
+```{r one way crit5}  
+alpha <- 0.05
+u.s <- qt(1-(alpha), df=14)
+l.s <- qt(alpha,df=14)
+
+
+par(mar=c(0.5,1,1,1))
+x <- seq(-3, 3, by=0.001)
+y <- dt(x, df=14)
+plot(x, y, type="l", axes=F, ylim=c(-0.02, 0.38), main="", xlab="t", ylab="")
+abline(h=0)
+polygon(c(-3, x[x<l.s], l.s), c(0, y[x<l.s], 0), col=2)
+text(l.s, -0.02, round(l.s,3))
+
+par(mar=c(0.5,1,1,1))
+plot(x, y, type="l", axes=F, ylim=c(-0.02, 0.38), main="", xlab="t", ylab="")
+abline(h=0)
+polygon(c(u.s, x[x>u.s], 3), c(0, y[x>u.s], 0), col=2)
+text(u.s, -0.02, round(u.s,3))
+```
+
+## 가설검정
+
+### 임계점과 기각역 
+
+  + (귀무가설 하에서)검정통계량이 임계치보다 크거나 작으면 귀무가설 기각/ 검정통계량이 기각역 안에 있으면 귀무가설 기각
+
+$$T =\frac{\bar{X}-\mu_0}{s/\sqrt{N}} =-1.37 > -2.14,\\
+T =\frac{\bar{X}-\mu_0}{s/\sqrt{N}} =-1.37 < 2.14$$
+
+유의수준 5% 양측검정 시 귀무가설을 기각하지 못함
+
+$$T =\frac{\bar{X}-\mu_0}{s/\sqrt{N}} =-1.37 > -1.76,\\
+T =\frac{\bar{X}-\mu_0}{s/\sqrt{N}} =-1.37 < 1.76$$
+
+유의수준 5% 단축검정 시 귀무가설 기각 못함.
+
+그럼 유의수준이 3% 면? 1% 면? 25%면?
+
+```{r cirt3.1}
+alpha <- 0.03
+ul.3 <- qt(1-(alpha/2), df=14)
+ll.3 <- -ul.3
+print ("crit at sig level 3%: two-way")
+print (ul.3)
+print (ll.3)
+alpha <- 0.03
+ul.3.1 <- qt(1-(alpha), df=14)
+ll.3.1 <- -ul.3.1
+print ("crit at sig level 3%: one-way")
+print (ul.3.1)
+print (ll.3.1)
+
+
+alpha <- 0.01
+ul.1 <- qt(1-(alpha/2), df=14)
+ll.1<- -ul.1
+ll.1<- -ul.1
+print ("crit at sig level 1%: two-way")
+print (ul.1)
+print (ll.1)
+
+alpha <- 0.01
+ul.1.1 <- qt(1-(alpha), df=14)
+ll.1.1 <- -ul.1.1
+print ("crit at sig level 1%: one-way")
+print (ul.1.1)
+print (ll.1.1)
+
+```
+
+
+### p-value
+
+  + p-value :  $P(T>|t|)$ (양측검정) $P(T>t), P(T<t)$ (단측검정)
+
+  + 정의: 현재의 검정통계치로는 가설을 채택하지도, 기각하지도 못하는 유의수준
+
+  + 가설검정: $\alpha> P(T>|t|)$ (양측검정) , $\alpha > P(T>t),\alpha < P(T<t)$ (단측검정) 이면 가정을 채택
+
+```{r pvalue}
+pv.T=1-pt(-T,df=(N-1))+pt(T,df=(N-1))
+print ("Pvalue . Two way test")
+print (pv.T)
+print ("Ho reject at 5%?")
+pv.T<0.05
+print ("Ho reject at 3%?")
+pv.T<0.03
+print ("Ho reject at 1%?")
+pv.T<0.01
+
+
+pv.T.1=pt(T,df=(N-1))
+print("Pvalue one way test(smaller)")
+print (pv.T.1)
+print ("Ho reject at 5%?")
+pv.T.1<0.05
+print ("Ho reject at 3%?")
+pv.T.1<0.03
+print ("Ho reject at 1%?")
+pv.T.1<0.01
+```
+
+# 단일 모집단 가설검정
+
+## 모집단 평균 가설검정: 여아 신생아 몸무게
+
+1. 가설 수립
+  
+  $$H_o:\mu=2800(g),\qquad .vs\qquad H_1:\mu > 2800$$
+
+2. 검정 통계량 계산
+  
+  $$H_o: T =\frac{\bar{X}-\mu_o}{s/\sqrt(N)}\sim t(N-1)\\
+  T =\frac{3133.444-2800}{631.5828\sqrt{18}}=2.233$$
+  
+
+3. 가설 채택 기준 설정: 유의수준 5\% 오른쪽 한쪽검정
+  
+  $$ c_{\alpha,u}:\qquad P(T>c_{\alpha,u})=0.05 \rightarrow c_{\alpha, u}=$$ 
+  
+```{r crit5.t17.oneway}
+qt(1-0.05,17)
+```
+
+4. 채택/기각 결정
+
+$$T = 2.23 > 1.739607 \Rightarrow \quad \mbox{Reject } H_o$$
+$$P(T>t) = $$
+
+```{r p.t17.oneway}
+1-pt(2.23,df=17)
+```
+
+$$ <0.05\Rightarrow \mbox{Reject } H_o$$
+```{r weightttest}
+#data <- read.table("http://www.amstat.org/publications/jse/datasets/babyboom.dat.txt", header=F)
+load("weight.Rdata")
+str( data )
+names(data) <- c("time", "gender", "weight", "minutes")
+tmp <- subset(data, gender==1)
+weight <- tmp[[3]]
+
+barx <- mean(weight)
+s <- sd(weight)
+n <- length(weight)
+h0 <- 2800
+( t.t <- (barx - h0) / (s / sqrt(n)) )
+
+alpha <- 0.05
+( c.u <- qt(1-alpha, df=n-1) )
+( p.value <- 1 - pt(t.t, df=n-1) )
+
+t.test(weight, mu=2800, alternative="greater")
+
+
+# 도표 작성 : 그림 6-8
+par(mar=c(0,1,1,1))
+x <- seq(-3, 3, by=0.001)
+y <- dt(x, df=n-1)
+plot(x, y, type="l", axes=F, ylim=c(-0.02, 0.38), main="", xlab="t", ylab="")
+abline(h=0)
+
+polygon(c(c.u, x[x>c.u], 3), c(0, y[x>c.u], 0), col=2)
+abline(v=c.u,lwd=1)
+text(c.u, -0.02, paste("c.u=", round(c.u,3)))
+abline(v=t.t,lwd=4)
+polygon(c(t.t, x[x>t.t], 3), c(0, y[x>t.t], 0), density=20, angle=45)
+text(t.t, -0.02, paste("t=", round(t.t, 3)), pos=4)
+```
+
+## 모집단 비율 가설검정: 야구공 불량률
+
+1. 가설 수립
+  
+  $$H_o:p=0.1\qquad .vs\qquad H_1:p > 0.1$$
+  
+
+2. 검정 통계량 계산
+  
+  $$H_o: Z =\frac{\hat{p}-p}{\sqrt{\frac{\hat{p}(1-\hat{p})}{N}}}\sim N(0,1)$$
+  $$\hat{p}=X/n =\sum(Z_i)/N\quad Z_i \sim b(p),\qquad \hat{p}=\bar{Z}\sim N(p,p(1-p)/N)$$
+  
+  $$Z =\frac{\hat{p}-p}{\sqrt{\frac{p\times (1-p)}{N}}}=\frac{\hat{p}-0.1}{\sqrt{\frac{0.1\times (1-0.1)}{100}}}=0.333$$
+  
+  
+
+3. 가설 채택 기준 설정: 유의수준 5\% 오른쪽 한쪽검정
+  
+  $$ c_{\alpha,u}:\qquad P(Z>c_{\alpha,u})=0.05 \rightarrow c_{\alpha, u}=$$ 
+  
+```{r crit5.z.oneway}
+qnorm(1-0.05)
+```
+
+4. 채택/기각 결정
+
+$$Z = 0.33 < 1.644854 \Rightarrow \quad \mbox{Not Reject } H_o$$
+
+$$P(Z>0.33) = $$
+
+```{r p.z.oneway}
+1-pnorm(0.33)
+```
+
+$$ > 0.05\Rightarrow \mbox{Not Reject } H_o$$
+```{r badballttest}
+tmp <- read.table("./data/restitution.txt", header=T)
+rel <- ifelse(tmp$rst < 0.4134 | tmp$rst > 0.4374, 1, 0)
+
+n <- length(rel)
+nos <- sum(rel)
+sp <- nos / n
+hp <- 0.1
+(z <- (sp - hp) / sqrt( ( sp*(1-sp) )/n ) )
+
+alpha <- 0.05
+( c.u <- qnorm(1-alpha) )
+( p.value <- 1 - pnorm(z) )
+
+prop.test(nos, n, p=0.1, alternative="greater", correct=FALSE)
+
+# 도표 출력 : 그림 6-9
+par(mar=c(0,1,1,1))
+x <- seq(-3, 3, by=0.001)
+y <- dnorm(x)
+plot(x, y, type="l", axes=F, ylim=c(-0.02, 0.4), main="", xlab="z", ylab="")
+abline(h=0)
+abline(v=c.u,lwd=1)
+abline(v=z,lwd=4)
+text(c.u, -0.02, paste("c.u=", round(c.u,3)))
+text(z, -0.02, paste("z=", round(z, 3)))
+
+polygon(c(c.u, x[x>c.u], 3), c(0, y[x>c.u], 0), col=2)
+polygon(c(z, x[x>z], 3), c(0, y[x>z], 0), density=20, angle=45)
+text(1.2, 0.3, paste("P(Z>z)=", round(p.value, 3)), cex=0.8)
+```

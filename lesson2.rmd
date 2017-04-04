@@ -1,0 +1,279 @@
+---
+title: "Lesson 2.Answer"
+author: "Sung Won Kang"
+date: "2016년 11월 5일"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,message=FALSE,warning = FALSE)
+```
+
+
+0. 자료 준비(교재 pp. 37-48)
+
+
+```{r readcsv}
+#data=read.csv("C:/work_2016/Rstat/Lesson 2/data/ch02.csv",header=F,na.strings=c("."))
+data=read.csv(file="../data/ch02.csv",header=F,na.strings=c("."))
+str(data)
+data$V1=factor(data$V1,levels=c(1,2),labels=c("남자","여자"))
+data$V3=factor(data$V3,levels=(1:14),
+               labels=c("가구주","가구주의 배우자","자녀","자녀의배우자","가구주의 부모",
+                        "배우자의 부모","손자녀및배우자","증손자녀및배우자","조부모","형제자매및배우자","형제자매의자녀및배우자",
+                        "부모의형제자매및배우자","기타친인척","동거인"))
+data$V4=factor(data$V4,levels=1:8,
+               labels=c("안받음","초등학교","중학교","고등학교","대학4년제미만","대학4년제이상","석사과정","박사과정"))
+str(data)
+save.image("data.rda")
+```
+
+1. graph
+
+ - 산점도 1.(Scatterplot)
+```{r poltexample1}
+str(cars)
+summary(cars)
+#그냥 보는 그래프
+plot(cars$speed,cars$dist)
+plot(cars)
+#남에게 보여주는 그래프
+plot(cars$speed,cars$dist, main="속도와 제동거리", xlab="속도(mph)",ylab="제동거리(km)",pch=1,col="red")
+# pch =1 : 동그라미로 표시
+# col ="red": 표시 색깔은 빨간색 
+```
+
+ - 산점도 2.(Scatterplot): 시계열(time series)
+```{r poltexample2}
+str(Nile)
+summary(Nile)
+#그냥 보는 그래프
+plot(Nile)
+plot((1871:1970),Nile, xlab="Time",type="l")
+plot((start(Nile)[1]:end(Nile)[1]),Nile, xlab="Time",type="l")
+
+#남에게 보여주는 그래프
+plot(Nile, main="나일강의 연도별 유량변화", xlab="연도",ylab="유량")#선그래프
+plot(Nile, type="p",main="나일강의 연도별 유량변화", xlab="연도",ylab="유량")#점그래프
+
+
+```
+
+ - 막대그래프와 히스토그램: barplot(), hist()
+```{r bar}
+load("data.rda")
+str(data)
+summary(data)
+
+table(data$V5)
+table.V5=table(data$V5)# 자녀 수의 분포
+barplot(table.V5)
+barplot(table.V5, main="출생아별 빈도", xlab="출생아수",ylab="빈도")
+
+table(data$V1,data$V4)#남녀-교육수준 분포
+tableV1.V4=table(data$V1,data$V4) 
+barplot(tableV1.V4)# 내가 보기용. 어? 뭔가 부족하네?
+barplot(tableV1.V4, legend.text=T)#내가 보기용
+barplot(tableV1.V4, legend.text=T,beside=T)#나란히 보기
+barplot(tableV1.V4, legend.text=T,horiz=T)#옆으로 뻗는 막대그래프
+barplot(tableV1.V4, legend.text=T,horiz=T,beside=T)#옆으로 뻗는 막대그래프
+
+#남에게 보여주기용
+barplot(tableV1.V4, legend.text=T, col=c("orange","green"), main="학력에따른 성별인원수",xlab="학력",ylab="빈도")
+
+```
+
+```{r hist}
+hist(data$V2)#나이의 분포
+hist(data$V2, breaks=c(seq(0,90,10)))#나이의 분포
+#보고용
+hist(data$V2, breaks=c(seq(0,90,10)), right=F,main="연령별분포",xlab="연령", ylab="빈도")
+
+```
+
+- 파이그래프: pie()
+```{r pie}
+table(data$V4)
+table.V4=table(data$V4)
+pie(table.V4)#내가 보가
+pie(table.V4, main="학력수준별 비중")
+
+jpeg(filename="pie.jpg")
+pie(table.V4, main="학력수준별 비중")
+dev.off()
+```
+
+2.모수와 통계량(parameter, statistics)
+- rara의 Cafe 자료
+```{r raracafe}
+#ranicafe=read.csv("C:/work_2016/Rstat/Lesson 2/data/cafedata.csv",header=T,na.strings=c("na"))
+ranicafe=read.csv("../data/cafedata.csv",header=T,na.strings=c("na"))
+str(ranicafe)
+summary(ranicafe)
+
+table.coffee=table(ranicafe$Coffees)
+coffe.ext=rep(0,50)
+coffe.ext[as.numeric(names(table.coffee))]=table.coffee
+names(coffe.ext)=(1:50)
+barplot(coffe.ext)
+```
+
+- 표본통계량1: 자료의 범위(max min)
+```{r maxmin}
+ranicafe$Coffee
+
+#max
+sort(ranicafe$Coffee)
+sort(ranicafe$Coffee)[1]
+min(ranicafe$Coffee,na.rm=T)
+
+#min
+sort(ranicafe$Coffee,decreasing=T)
+sort(ranicafe$Coffee,decreasing=T)[1]
+max(ranicafe$Coffee,na.rm=T)
+
+range(ranicafe$Coffee,na.rm=T)
+```
+
+- 표본통계량2: 대표값(최빈값,평균,중앙값)
+```{r rcmeanmedian}
+#최빈값(mode)
+rc=ranicafe$Coffees
+stem(rc)
+sort(table(ranicafe$Coffees),decreasing=T)[1]
+names(sort(table(ranicafe$Coffees),decreasing=T)[1])
+as.numeric(names(sort(table(ranicafe$Coffees),decreasing=T)[1]))
+#평균
+## 평균 가중치
+weight=1/length(rc)
+sum(rc*weight,na.rm=T)
+weight2=1/length(rc[!is.na(rc)]) # Size without mission obs
+sum(rc*weight2,na.rm=T)
+
+## 평균
+mean(rc)
+mean(rc,na.rm=T)
+
+rc=c(rc,NA)
+tail(rc,n=5)
+mean(rc)
+mean(rc,na.rm=T)
+
+## 평균은 자주 보이지 않을 수 있다.
+rc[(rc==21)|(rc==22)] # cannot determine, then we include 
+rc[which(rc==21|rc==22)] # we include wha we can determine. Things cannot be determined our out.
+ranicafe[(rc==21)|(rc==22),]
+ranicafe[which((rc==21)|(rc==22)),]
+
+## 평균은 outlier에 민감하다.
+rc[which.max(rc)]=480
+mean(rc,na.rm=T)
+
+## 중위수
+rc_m=rc[!is.na(rc)]
+median.idx=(length(rc_m)+1)/2
+rc.s=sort(rc_m)
+rc.s[median.idx]
+
+median(rc,na.rm=T)
+## 중위수는 outlier에 덜 민감하다.
+rc[which.max(rc)]=48
+median(rc,na.rm=T)
+```
+
+- 표본통계량 3: 펴저있는 정도(표준편차 사분위수 범위)
+    a. 표준편차 (Standard deviation)
+```{r spreadmeasure}
+## 편차
+height=c(164, 166, 168, 170,172,174,176)
+height.m=mean(height)
+height.dev=height-mean(height)
+sum(height.dev)
+# (더하면 0이더라)
+
+## 분산
+var(height.dev)
+#? var
+mean(height.dev^2) # 확률 1/6로 키가 가지는 값이 6개 밖에 없는 경우
+var(height.dev)*(length(height)-1)/length(height)
+
+##표준편차
+sd(height)
+
+##?sd
+sqrt(mean(height.dev^2)) # 확률 1/6로 키가 가지는 값이 6개 밖에 없는 경우
+sd(height)*sqrt((length(height)-1)/length(height))
+
+
+## 커피 판매 평균, 표준편차
+rc.m=mean(rc,na.rm=T)
+rc.sd=sd(rc,na.rm=T)
+cat("Coffee sales=", round(rc.m,1),"+/-",round(rc.sd,2))
+
+## 변동계수
+
+rj=ranicafe$Juices
+rj.m=mean(rj,na.rm=T)
+rj.sd=sd(rj,na.rm=T)
+rc.cv=rc.sd/rc.m
+rj.cv=rj.sd/rj.m
+rc.cv
+rj.cv
+# 쥬스 판매가 커피 판매보다 더 변화가 심하다.
+```
+
+    b. 4분위수
+```{r quantile}
+# 최소갑, 4분위수, 최대값
+qs=quantile(rc,na.rm=T)
+qs
+# 3분위수 -1분위수: 분위 간 범위
+IQR(rc,na.rm=T)
+qs[4]-qs[2]
+bp.rc=boxplot(rc,na.rm=T)
+bp.rc
+
+## 자동차 제동거리 outlier
+is.na(cars$dist)
+qscar=quantile(cars$dist)
+qscar
+bp.dist=boxplot(cars$dist)
+bp.dist
+
+# outlier 판별 기준: 하한값/상한값
+
+ll.dist=qscar[2]-1.5*IQR(cars$dist,na.rm=T)
+ul.dist=qscar[4]+1.5*IQR(cars$dist,na.rm=T)
+dist.out=cars$dist[(cars$dist>ul.dist|cars$dist<ll.dist)&!is.na(cars$dist)]
+dist.in=cars$dist[(cars$dist<=ul.dist)&(cars$dist>=ll.dist)&!is.na(cars$dist)]
+whisker.dist=range(dist.in)
+range(bp.dist$stats)
+dist.out
+
+
+ll.rc=qs[2]-1.5*IQR(rc,na.rm=T)
+ul.rc=qs[4]+1.5*IQR(rc,na.rm=T)
+rc.out=rc[(rc>ul.rc|rc<ll.rc)&!is.na(rc)]
+rc.in=rc[(rc<=ul.rc)&(rc>=ll.rc)&!is.na(rc)]
+whisker.rc=range(rc.in)
+range(bp.rc$stats)
+rc.out
+
+## quantile. extended
+quantile(rc,seq(0,1,0.1),na.rm=T)
+#install.packages("statar")
+library(statar)
+xtile(rc,n=4)
+xtile(rc,prob=seq(0.25,1,0.25))
+```
+
+3. 다음 시간 준비
+
+```{r prep}
+save.image("Lesson2.RData")
+#install.packages("prob")
+library("prob")
+tosscoin(1)
+```

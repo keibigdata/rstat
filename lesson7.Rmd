@@ -1,0 +1,366 @@
+---
+title: "Lesson7"
+author: "Sung Won Kang"
+date: "2016년 12월 일"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, eval=TRUE,message=FALSE)
+```
+
+# 모집단이 2개
+
+## 독립표본, 대응표본
+  + 독립표본 : 서로 독립인 2개의 모집단에서 추출한 2개의 표본
+  + 대응표본 : 같은 대상을 실험(Treatment) 이전과 이후에 측정하여 수집한 표본 
+
+## (독립표본) 모평균 차이 검정(Two sample test)
+
+### 자료: 여아 신생아 몸무게(X1), 남아 신생아 몸무게(X2)   
+```{r ch7data} 
+
+#data=read.table("http://www.amstat.org/publications/jse/datasets/babyboom.dat.txt",header=F)  
+#names(data)=c("time","gender","weight","minutes")#시간.분, 성별, 체중, 분#
+#chapter7=data[,c(2,3)]
+#save(chapter7,file="ch7.Rdata")
+load("ch7.Rdata")
+X1=chapter7[chapter7$gender==1,]#girls weight
+X2=chapter7[chapter7$gender==2,]#boys' weight
+```  
+
+###  기본가정 : 독립표본, 정규분포, 분산이 같음(등분산성)
+  
+  $$ X_1\sim N(\mu_1, \sigma^2_1)\qquad X_2\sim N(\mu_2,\sigma^2_2)\\ \sigma^2_1=\sigma^2_2$$
+  
+### 1단계 : 등분산성 검정 - 유의수준 5% 양측검정
+      
+      1.가설 수립 :  남아 신생아 체중 분산 = 여아 신생아 체중 분산  
+      2.검정 통계량 계산:
+      3.가설 채택 기준 설정: 유의 수준 5%
+      4.채택/기각 결정
+  
+#### 1. 가설 수립 
+ 
+ $$H_o:\frac{\sigma^2_1}{\sigma^2_2} =1\qquad\mbox{.vs}\qquad H_1:\frac{\sigma^2_1}{\sigma^2_2} \neq 1$$
+ 
+#### 2. 검정통계량 계산
+          
+ $$F=\frac{\frac{(n-1)S^2_1}{\sigma^2_1 (n-1)}}{\frac{(m-1)S^2_2}{\sigma^2_2 (m-1)}}=\frac{S^2_1/\sigma^2_1}{S^2_2/\sigma^2_2}\sim F(n-1,m-1)$$
+ 귀무가설이 성립한다면
+ 
+ $$F=\frac{S^2_1/\sigma^2_1}{S^2_2/\sigma^2_2}=\frac{S^2_1/\sigma^2}{S^2_2/\sigma^2}=\frac{S^2_1}{S^2_2}\sim F(n-1,m-1)\\
+  = 2.177$$
+  
+  
+#### 3. 가설 채택 기준 설정: 양측검정, F 분포
+ 
+$$\mbox{임계치 : } P(F>c_u) =0.025, P(F<C_l)=0.025 \Rightarrow C_l= 0.392, C_u=2.360$$
+
+$$ \mbox{기각역 : } \{F<0.392\} \cup \{F>2.36\}$$
+$$ \mbox{ P value : } 2\times [1-P(F>2.177)] = 0.076$$
+
+#### 4. 가설 기각/채택
+
+
+$$ F = 2.177 <2.36 \rightarrow \mbox{ not reject } H_o$$
+$$ P = 2\times[1-P(F>2.177)] = 0.076 > 0.05 \rightarrow \mbox{ not reject } H_o$$
+
+```{r equalva.test}
+# 검정통계량
+S1=var(X1$weight)
+S2=var(X2$weight)
+(Ftest=S1/S2)
+
+# 임계치, 기각역
+alpha=0.05
+(n=length(X1$weight))
+(m=length(X2$weight))
+
+(c.l=qf(alpha/2,(n-1),(m-1)))
+(c.u=qf(1-(alpha/2),(n-1),(m-1)))
+# p value
+
+(Pv=2*(1-pf(Ftest,17,25)))
+
+# test critical value
+(Ftest > c.u)|(Ftest<c.l)
+
+#test p value
+Pv < alpha
+
+var.test(chapter7$weight~chapter7$gender)
+```
+
+### 2단계 : 모평균 차이 검정
+
+      1.가설 수립 :  여아 신생아 체중 평균 < 남아 신생아 체중 평균
+      2.검정 통계량 계산:
+      3.가설 채택 기준 설정: 유의 수준 5% 단축검정(왼쪽)
+      4.채택/기각 결정
+  
+#### 1. 가설 수립 
+ 
+ $$H_o: \mu_1-\mu_2=0\qquad\mbox{.vs}\qquad H_1:\mu_1-\mu_2<0$$
+ 
+#### 2. 검정통계량 계산
+          
+ $$T=\frac{(\bar{X}_1-\bar{X}_2)-(\mu_1-\mu_2)}{s_p \sqrt{1/n+1/m}}\sim t(n+m-2)$$
+ $$Z=\frac{(\bar{X}_1-\bar{X}_2)-(\mu_1-\mu_2)}{\sigma \sqrt{1/n+1/m}}\sim N(0,1)$$
+ $$ \frac{(n-1)S^2_1+(m-1)S^2_2}{\sigma^2}\sim \chi^2(n+m-2)$$
+ $$T=\frac{(\bar{X}_1-\bar{X}_2)-(\mu_1-\mu_2)}{\sigma \sqrt{1/n+1/m}}/\sqrt{\frac{(n-1)S^2_1+(m-1)S^2_2}{\sigma^2(n+m-2)}}\sim t(n+m-2)$$
+ 
+ $$s_p = \sqrt{\frac{(n-1)S^2_1+(m-1)S^2_2}{(n+m-2)}}$$
+ $$T=\frac{(\bar{X}_1-\bar{X}_2)-(\mu_1-\mu_2)}{s_p \sqrt{1/n+1/m}}\sim t(n+m-2)$$
+
+귀무가설 하에서는 $\mu_1-\mu_2=0$ 이므로 검정통계량은
+
+$$ T =\frac{3132.444-3375.308}{520.1151\times\sqrt{1/18+1/26}} = -1.5229$$
+ 
+  
+#### 3. 가설 채택 기준 설정: 단측검정, T 분포
+ 
+$$\mbox{임계치 : } P(T<c_l)=0.05 \Rightarrow C_l=-1.6820$$
+
+$$\mbox{기각역 : } {T<-1.6820} $$
+
+
+
+$$ \mbox{ P value : }  P(T<-1.5229) = 0.0676$$
+
+#### 4. 가설 기각/채택
+
+
+$$ T = -1.5229 > -1.6820  \rightarrow \mbox{ not reject } H_o$$
+$$ P(T<-1.5229) = 0.0676 > 0.05 \rightarrow \mbox{ not reject } H_o$$
+
+```{r equalva.test2}
+# 검정통계량
+(barx1=mean(X1$weight))
+(barx2=mean(X2$weight))
+(n=length(X1$weight))
+(m=length(X2$weight))
+
+S1=var(X1$weight)
+S2=var(X2$weight)
+sp=sqrt(((n-1)*S1+(m-1)*S2)/(n+m-2))
+(T=(barx1-barx2)/(sp*sqrt(1/n+1/m)))
+
+
+# 임계치, 기각역
+alpha=0.05
+(c.l=qt(alpha,df=n+m-2))
+# p value
+(Pv=pt(T,df=n+m-2))
+
+# test critical value
+(T < c.l)
+
+#test p value
+Pv < alpha
+
+t.test(chapter7$weight~chapter7$gender,mu=0,alternative="less",var.equal=FALSE)
+```
+
+### 분산이 다를 경우
+
+#### 검정통계량
+
+ $$T=\frac{(\bar{X}_1-\bar{X}_2)-(\mu_1-\mu_2)}{\sqrt{s^2_1/n+s^2_2/m}}\sim t(v)$$
+ 
+$$v=\frac{(s^2_1/n)^2+(s^2_2/m)^2}{s^4_1/n^2(n-1)+s^4_2/m^2(m-1)}$$
+```{r equalva.test3}
+t.test(chapter7$weight~chapter7$gender,mu=0,alternative="less",var.equal=FALSE)
+```
+
+## (대응표본) 모평균 차이 검정(Paired Data)
+
+### 자료: 식욕부진증 치료요법 이전의 체중과 이후의 체중
+```{r ch7data.ana} 
+
+A.data=read.csv("./data/01.anorexia.csv",header=T)  
+str(A.data)
+```  
+
+###  기본가정 : 체중의 차이는 정규분포를 한다.
+
+$$D=X_{pre}-X_{post}\sim N(\mu_D,\sigma_D)$$
+
+### 가설검정: 식욕부진증 치료요법 이후에 체중이 증가하는가?
+
+      1.가설 수립 :  치료요법 이전 체중 <치료요법 이후 체중 
+      2.검정 통계량 계산:
+      3.가설 채택 기준 설정: 유의 수준 5%
+      4.채택/기각 결정
+
+#### 1. 가설 수립
+
+$$H_0:\mu_D = 0 \qquad \mbox{.vs}\qquad H_1:\mu_D<0$$
+#### 2. 검정통계량
+
+$$T=\frac{\bar{D}-\mu_D}{s_D/\sqrt{N}}\sim t(N-1)$$
+귀무가설 하에서는 $\mu_D=0$ 이므로 검정통계량은
+
+$$T =\frac{7.2647}{51.2287/\sqrt{16}}=-4.1849$$
+#### 3. 가설 채택 기준 설정
+
+$$\mbox{임계치, 기각역 : } P(T<C_l) =0.05\rightarrow C_l = -1.7458\qquad \{T<-1.7458\}$$
+$$\mbox{ P value : } P(T<-4.1849) = 0.0003$$
+
+#### 4.  가설 기각/채택
+
+$$ T = -4.1849 < C_l = -1.7458 \Rightarrow \mbox{ Reject } H_0$$
+$$ P(T<-4.1849) = 0.0003 < 0.05 \Rightarrow \mbox{ Reject } H_0$$
+```{r pairtest}
+D=A.data$Prior-A.data$Post
+# 검정통계량
+(bard=mean(D))
+ssd=var(D)
+(T=bard/sqrt(ssd/length(D)))
+# 임계점, 기각역, pvalue
+(c.l=qt(alpha,df=(length(D)-1)))
+(pvalue=pt(T,df=(length(D)-1)))
+
+# 가설 기각/채택
+
+T<c.l
+
+pvalue<alpha
+
+t.test(A.data$Prior,A.data$Post,paired=T,alternative="less")
+```
+
+
+# 모집단이 3개 이상 (ANOVA)
+
+- 예제: 대도시, 중소도시, 읍면지역의 서비스 만족도 차이가 있는가, 없는가?
+
+- 가설: 차이가 없다. vs. 셋 중 하나는 다르다.
+
+## 기본가정 : 정규분포,독립표본, 등분산성
+
+$$y_{i,j}\sim N(\mu+\alpha_i, \sigma^2)\qquad j \in\{1,2,\cdots,N\} \mbox{( individual)},\quad i\in\{1,2,\cdots, k\}\mbox{(  group )}$$
+$$y_{1,j}\sim N(\mu+\alpha_1,\sigma^2), j=1,2,\cdots,n_1$$
+
+$$y_{2,j}\sim N(\mu+\alpha_2,\sigma^2), j=1,2,\cdots,n_2$$
+$$ \vdots$$
+
+$$y_{k,j}\sim N(\mu+\alpha_k,\sigma^2), j=1,2,\cdots,n_k$$
+
+- 특징
+
+$$\sum^k_i\sum^n_j (y_{ij}-\bar{y})^2 =\sum^k_i\sum^{n_i}_{j=1} (y_{ij}-\bar{y}_i)^2+ \sum^k_i\sum^{n_i}_{j=1}(\bar{y}_i-\bar{y})^2$$
+
+
+$$ SST = SSE + SSt $$
+
+     + SST(Total Sum of Squres): 개별 data - 전체평균
+     + SSE(Error Sum of Squres): 개별 data - Group 평균 (within difference)
+     + SSt(Treatment Sum of Squres): Group 평균 - 전체평균 (between difference)
+
+
+### 가설검정: Group 별 격차가 있는가?
+
+      1.가설 수립 :  각 Group 별 격차는 없다 vs. 한 Group에서라도 격차는 존재한다
+      2.검정 통계량 계산:
+      3.가설 채택 기준 설정: 유의 수준 5%
+      4.채택/기각 결정
+      
+#### 가설 수립
+
+$$H_0 : \alpha_1=\alpha_2=\cdots =\alpha_k =0$$
+
+
+$$H_1 : \exists i \qquad s.t.\qquad \alpha_i \neq 0$$
+
+
+#### 검정통계량 계산(귀무가설)
+
+$$ F=\frac{SSt/(k-1)}{SSE/(n-k)}\sim F(k-1,n-k)$$
+
+$$ F =\frac{150.0933/(3-1)}{30139.38/(150-3)} = 0.366$$
+
+```{r anova}
+
+ad=read.csv(file="./data/age.data.csv",header=T)
+ad$scale=factor(ad$scale)
+y1=ad$age[ad$scale==1]
+y2=ad$age[ad$scale==2]
+y3=ad$age[ad$scale==3]
+
+y1.mean=mean(y1)
+y2.mean=mean(y2)
+y3.mean=mean(y3)
+y=mean(ad$age)
+
+sse.1=sum((y1-y1.mean)^2)
+sse.2=sum((y2-y2.mean)^2)
+sse.3=sum((y3-y3.mean)^2)
+
+(sse=sse.1+sse.2+sse.3)
+(dfe=length(y1)-1+length(y2)-1+length(y3)-1)
+
+sst.1=length(y1)*sum(y1.mean-y)^2
+sst.2=length(y2)*sum(y2.mean-y)^2
+sst.3=length(y3)*sum(y3.mean-y)^2
+
+(sst=sst.1+sst.2+sst.3)
+(dft=length(levels(ad$scale))-1)
+
+# check the decomposition
+(SST=sum((ad$age-y)^2))
+(SS=sst+sse)
+
+# 검정통계량
+(F=(sst/dft)/(sse/dfe))
+```
+
+#### 가설 채택 기준 설정: 유의 수준 5%
+
+$$\mbox{ 임계치, 기각역 : } P(F>C.u) = 0.05\rightarrow C.u=3.057621\qquad \{F > 3.0576\}$$
+
+
+
+$$\mbox{ P value :  } P(F>0.3660) = 0.6941$$
+
+
+
+
+#### 채택/기각 결정
+
+
+$$ F = 0.3660 < 3.0576 \rightarrow \mbox{ cannot reject } H_0$$
+
+
+$$ P(F>0.3660) = 0.6941 > 0.05 \rightarrow \mbox{ cannot reject } H_0$$
+```{r anova.2}
+#임계치
+(c.u=qf(1-alpha,dft,dfe))
+# p value
+(p.v=1-pf(F,dft,dfe))
+
+F>c.u
+
+p.v<alpha
+
+ow=lm(age~scale,data=ad)
+anova(ow)
+```
+
+```{r anovag}
+x <- seq(0, 4, by=0.01)
+yf <- df(x, 2, 147)
+par(mar=c(2, 1, 1, 1))
+plot(x, yf, type="l", ylim=c(-0.1, 1), xlab="", ylab="", axes=F)
+abline(h=0)
+cu.r <- round(c.u, 2)
+polygon(c(cu.r, x[x>=cu.r], 4), c(0, yf[x>=cu.r], 0), col="red")
+arrows(c.u, 0.3, c.u, 0.08, length=0.1)
+#abline(v=c.u)
+text(c.u, -0.1, paste("P(F > ", round(c.u, 3),")=0.05", sep=""), cex=0.8)
+lines(c(F, F), c(0,df(F, 2, 147)), lty=2)
+arrows(F, -0.05, F, 0, length=0.05)
+#abline(v=F)
+text(F, -0.1, paste("F=", round(F, 3),sep=""), cex=0.8)
+```
+
